@@ -8,9 +8,12 @@ const port = process.env.PORT || 3000;
 // CORS middleware should be before other middleware
 app.use(
   cors({
-    origin: "http://127.0.0.1:5500", // Allow your development server
-    methods: ["GET", "POST"], // Allowed methods
-    allowedHeaders: ["Content-Type"], // Allowed headers
+    origin: [
+      "http://127.0.0.1:5500",
+      "https://els-test-llm-auditor-notes-6079ecd68297.herokuapp.com/",
+    ],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
   })
 );
 
