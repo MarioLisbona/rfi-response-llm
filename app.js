@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { replyToRfiAndResponse } from "./analyseResponse.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -24,16 +25,40 @@ app.get("/", (req, res) => {
 });
 
 // Add new responses endpoint
-app.post("/api/responses", (req, res) => {
+app.post("/api/responses", async (req, res) => {
   const { issuesIdentified, acpResponse } = req.body;
 
   // Log the received data
-  console.log("New Response:", {
+  console.log("Received Request:", {
     issuesIdentified,
     acpResponse,
   });
 
-  res.status(200).json({ message: "Response received" });
+  try {
+    // Create client response object
+    const clientResponse = {
+      issuesIdentified,
+      acpResponse,
+    };
+
+    // Get AI analysis response
+    const aiResponse = await replyToRfiAndResponse(clientResponse);
+
+    // Log the AI response
+    console.log("AI Response:", aiResponse);
+
+    // Send both the original data and AI response back to client
+    res.status(200).json({
+      original: clientResponse,
+      analysis: aiResponse,
+    });
+  } catch (error) {
+    console.error("Error processing response:", error);
+    res.status(500).json({
+      error: "Failed to process response",
+      message: error.message,
+    });
+  }
 });
 
 // Start the server
