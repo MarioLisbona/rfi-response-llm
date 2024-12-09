@@ -1,56 +1,48 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { replyToRfiAndResponse } from "./analyseResponse.js";
+
+// Get directory name in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// CORS middleware should be before other middleware
+// CORS middleware
 app.use(
   cors({
     origin: [
       "http://127.0.0.1:5500",
-      "https://els-test-llm-auditor-notes-6079ecd68297.herokuapp.com/",
+      "https://els-test-llm-auditor-notes-6079ecd68297.herokuapp.com",
     ],
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })
 );
 
-// Middleware to parse JSON bodies
 app.use(express.json());
-// Serve static files from public directory
 app.use(express.static("public"));
 
-// Simple route
+// Serve index.html at root route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to the Express application!" });
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Add new responses endpoint
+// API endpoint
 app.post("/api/responses", async (req, res) => {
   const { issuesIdentified, acpResponse } = req.body;
 
-  // Log the received data
-  console.log("Received Request:", {
-    issuesIdentified,
-    acpResponse,
-  });
-
   try {
-    // Create client response object
     const clientResponse = {
       issuesIdentified,
       acpResponse,
     };
 
-    // Get AI analysis response
     const aiResponse = await replyToRfiAndResponse(clientResponse);
 
-    // Log the AI response
-    console.log("AI Response:", aiResponse);
-
-    // Send both the original data and AI response back to client
     res.status(200).json({
       original: clientResponse,
       analysis: aiResponse,
@@ -64,7 +56,6 @@ app.post("/api/responses", async (req, res) => {
   }
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}/`);
 });
